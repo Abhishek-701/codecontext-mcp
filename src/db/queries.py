@@ -37,7 +37,8 @@ UPSERT_FILE_INDEX = """
 """
 
 SEMANTIC_SEARCH = """
-    SELECT id, name, file_path, line_start, docstring,
+    SELECT id, name, qualified_name, kind, file_path,
+           line_start, docstring,
            1 - (embedding <=> $1::vector) AS similarity
     FROM symbols
     WHERE embedding IS NOT NULL
