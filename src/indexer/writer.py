@@ -98,7 +98,8 @@ async def generate_and_store_embeddings(
                     continue
                 text: str = row["docstring"] or row["name"]
                 embedding = generate_embedding(text)
-                await conn.execute(UPDATE_SYMBOL_EMBEDDING, embedding, sym_id)
+                vec_str = "[" + ",".join(str(x) for x in embedding) + "]"
+                await conn.execute(UPDATE_SYMBOL_EMBEDDING, vec_str, sym_id)
             except Exception as e:
                 logger.warning(
                     "Embedding generation failed",

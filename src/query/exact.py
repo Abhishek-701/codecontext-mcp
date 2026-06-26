@@ -1,6 +1,7 @@
 """Structured queries against the symbols and relationships tables."""
 
 import logging
+import pathlib
 import re
 import subprocess
 
@@ -54,6 +55,16 @@ def _parse_git_log(stdout: str, limit: int) -> list[Commit]:
         ))
 
     return commits[:limit]
+
+
+def _git_file_path(file_path: str, repo_path: str) -> str:
+    """Return a repo-relative POSIX path for git log -L."""
+    path = pathlib.Path(file_path)
+    try:
+        rel = path.relative_to(pathlib.Path(repo_path).resolve())
+    except ValueError:
+        rel = path
+    return rel.as_posix()
 
 
 async def get_symbol(name: str, pool: asyncpg.Pool) -> Symbol | None:
@@ -141,8 +152,7 @@ async def get_change_history(
     cmd = [
         "git", "log",
         "--format=%H|%an|%aI|%s",
-        "--follow",
-        f"-L{symbol.line_start},{symbol.line_end}:{symbol.file_path}",
+        f"-L{symbol.line_start},{symbol.line_end}:{_git_file_path(symbol.file_path, repo_path)}",
         f"-n{limit}",
     ]
     result = subprocess.run(cmd, cwd=repo_path, capture_output=True, text=True)

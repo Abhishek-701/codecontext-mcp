@@ -1,7 +1,6 @@
 """CodeContext MCP server — five tools over the query engine."""
 
 import dataclasses
-import logging
 
 from fastmcp import FastMCP
 
@@ -9,14 +8,12 @@ from src.mcp.lifespan import app_lifespan
 from src.query import exact as query_exact
 from src.query import semantic as query_semantic
 
-logger = logging.getLogger(__name__)
-
 mcp = FastMCP("codecontext", lifespan=app_lifespan)
 
 
 @mcp.tool()
 async def get_symbol(name: str, repo_path: str) -> dict:
-    """Return definition, location, and docstring for a named symbol."""
+    """Return definition, location and docstring for a named symbol."""
     if not name.strip() or not repo_path.strip():
         return {"error": "name and repo_path are required", "code": "INVALID_INPUT"}
     result = await query_exact.get_symbol(name, mcp.pool)
@@ -27,7 +24,7 @@ async def get_symbol(name: str, repo_path: str) -> dict:
 
 @mcp.tool()
 async def find_callers(symbol_name: str, repo_path: str) -> dict:
-    """Return all call sites of a named symbol across the indexed repo."""
+    """Return all call sites of a named symbol across the repo."""
     if not symbol_name.strip() or not repo_path.strip():
         return {"error": "symbol_name and repo_path are required", "code": "INVALID_INPUT"}
     callers = await query_exact.find_callers(symbol_name, mcp.pool)
@@ -44,7 +41,7 @@ async def get_change_history(
     repo_path: str,
     limit: int = 10,
 ) -> dict:
-    """Return git commit history for the lines touched by a named symbol."""
+    """Return git commit history for lines touched by a symbol."""
     if not symbol_name.strip() or not repo_path.strip():
         return {"error": "symbol_name and repo_path are required", "code": "INVALID_INPUT"}
     limit = max(1, min(limit, 50))
@@ -76,7 +73,7 @@ async def semantic_search(
 
 @mcp.tool()
 async def get_file_outline(file_path: str, repo_path: str) -> dict:
-    """Return all indexed symbols in a file, ordered by line number."""
+    """Return all top-level symbols in a file in line order."""
     if not file_path.strip() or not repo_path.strip():
         return {"error": "file_path and repo_path are required", "code": "INVALID_INPUT"}
     symbols = await query_exact.get_file_outline(file_path, mcp.pool)

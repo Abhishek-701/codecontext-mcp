@@ -21,7 +21,7 @@ async def app_lifespan(server):
     server.pool = await create_pool()
     host = urlparse(postgres_url).hostname or "unknown"
     logger.info("CodeContext MCP server started")
-    logger.info("Watching index at %s", host)
+    logger.info(f"Watching index at {host}")
 
     try:
         yield
