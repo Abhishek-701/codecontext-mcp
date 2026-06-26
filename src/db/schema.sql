@@ -18,8 +18,9 @@ CREATE TABLE IF NOT EXISTS symbols (
 CREATE INDEX IF NOT EXISTS idx_symbols_name      ON symbols (name);
 CREATE INDEX IF NOT EXISTS idx_symbols_file_path ON symbols (file_path);
 CREATE INDEX IF NOT EXISTS idx_symbols_kind      ON symbols (kind);
-CREATE INDEX IF NOT EXISTS idx_symbols_embedding ON symbols USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 100);
+DROP INDEX IF EXISTS idx_symbols_embedding;
+CREATE INDEX idx_symbols_embedding ON symbols USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 1);
 
 -- Stores call-graph edges between symbols, tracking which symbol calls which.
 CREATE TABLE IF NOT EXISTS relationships (

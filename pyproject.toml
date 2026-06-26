@@ -1,7 +1,49 @@
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
-pythonpath = ["."]
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codecontext"
+version = "0.1.0"
+description = "Live-indexed codebase context server with an MCP interface"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp",
+    "tree-sitter",
+    "tree-sitter-python",
+    "tree-sitter-javascript",
+    "asyncpg",
+    "sentence-transformers",
+    "watchdog",
+    "pgvector",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
 [tool.ruff]
-line-length = 100
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: requires running database",
+]

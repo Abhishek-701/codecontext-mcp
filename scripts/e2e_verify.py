@@ -18,7 +18,7 @@ async def _connect_urls() -> str:
     candidates = [
         os.environ.get("POSTGRES_URL", ""),
         "postgresql://codecontext:codecontext@localhost:5433/codecontext",
-        "postgresql://codecontext:codecontext@localhost/codecontext",
+        "postgresql://codecontext:codecontext@localhost:5432/codecontext",
         "postgresql://postgres:postgres@localhost/codecontext",
         "postgresql://postgres:postgres@localhost/postgres",
     ]

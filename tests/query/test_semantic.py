@@ -99,7 +99,8 @@ async def test_semantic_search_returns_results(db_pool):
         async with db_pool.acquire() as conn:
             for sym_id, docstring in ids_and_docs:
                 embedding = generate_embedding(docstring)
-                await conn.execute(UPDATE_SYMBOL_EMBEDDING, embedding, sym_id)
+                vec_str = "[" + ",".join(str(x) for x in embedding) + "]"
+                await conn.execute(UPDATE_SYMBOL_EMBEDDING, vec_str, sym_id)
         results = await semantic_search("authentication", db_pool, limit=3)
         assert len(results) >= 1
         assert all(r.similarity > 0 for r in results)

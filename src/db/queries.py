@@ -72,7 +72,7 @@ GET_SYMBOL_BY_ID = """
 """
 
 UPDATE_SYMBOL_EMBEDDING = """
-    UPDATE symbols SET embedding = $1 WHERE id = $2
+    UPDATE symbols SET embedding = $1::vector WHERE id = $2
 """
 
 RESOLVE_CALLEE_ID = """

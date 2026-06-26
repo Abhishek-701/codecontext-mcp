@@ -9,7 +9,7 @@ import pytest_asyncio
 from src.db import init
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def db_pool() -> asyncpg.Pool:
     """Create a pool against TEST_POSTGRES_URL, run migrations, and tear down after the session."""
     url = os.environ.get("TEST_POSTGRES_URL")

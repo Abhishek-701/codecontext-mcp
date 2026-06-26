@@ -1,19 +1,63 @@
+# Local dev credentials only — not for production use.
 services:
-  db:
+  postgres:
     image: pgvector/pgvector:pg16
     environment:
+      POSTGRES_DB: codecontext
       POSTGRES_USER: codecontext
       POSTGRES_PASSWORD: codecontext
-      POSTGRES_DB: codecontext
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U codecontext -d codecontext"]
+      test: ["CMD-SHELL", "pg_isready -U codecontext"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 5
+
+  migrate:
+    build: .
+    command: python -m src.db.init
+    environment:
+      POSTGRES_URL: postgresql://codecontext:codecontext@postgres/codecontext
+      PYTHONPATH: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  bootstrap:
+    build: .
+    command: python -m src.indexer.bootstrap
+    environment:
+      POSTGRES_URL: postgresql://codecontext:codecontext@postgres/codecontext
+      WATCH_PATH: /repo
+      LOG_LEVEL: INFO
+      PYTHONPATH: /app
+    volumes:
+      - ${REPO_PATH}:/repo:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  watcher:
+    build: .
+    command: python -m src.watcher.daemon
+    environment:
+      POSTGRES_URL: postgresql://codecontext:codecontext@postgres/codecontext
+      WATCH_PATH: /repo
+      WATCH_USE_POLLING: "true"
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+      LOG_LEVEL: INFO
+      PYTHONPATH: /app
+    volumes:
+      - ${REPO_PATH}:/repo:ro
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
 volumes:
   pgdata:

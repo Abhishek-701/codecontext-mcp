@@ -8,6 +8,7 @@ import sys
 
 import asyncpg
 from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 
 from src.db import queries
 from src.db.init import create_pool
@@ -52,6 +53,18 @@ async def _process_event(event: FileChangeEvent, pool: asyncpg.Pool) -> None:
         )
 
 
+def _use_polling_observer() -> bool:
+    """Return True when WATCH_USE_POLLING is set (needed for Docker bind mounts)."""
+    return os.environ.get("WATCH_USE_POLLING", "").lower() in ("1", "true", "yes")
+
+
+def _create_observer():
+    """Return a filesystem observer; polling mode works on Docker volume mounts."""
+    if _use_polling_observer():
+        return PollingObserver()
+    return Observer()
+
+
 async def run_watcher(watch_path: str, pool: asyncpg.Pool) -> None:
     """Watch watch_path recursively and reindex source files as they change.
 
@@ -62,10 +75,11 @@ async def run_watcher(watch_path: str, pool: asyncpg.Pool) -> None:
     debouncer = Debouncer(delay_ms=300)
     handler = IndexerEventHandler(debouncer)
 
-    observer = Observer()
+    observer = _create_observer()
     observer.schedule(handler, watch_path, recursive=True)
     observer.start()
-    logger.info("Watcher started", extra={"path": watch_path})
+    mode = "polling" if _use_polling_observer() else "native"
+    logger.info("Watcher started", extra={"path": watch_path, "mode": mode})
 
     try:
         while True:
