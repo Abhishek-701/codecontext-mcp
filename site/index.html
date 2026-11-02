@@ -163,18 +163,6 @@ nav.stuck{background:rgba(255,255,255,.85);backdrop-filter:blur(14px);box-shadow
 .tech:hover{transform:translateY(-6px) rotate(-1deg);box-shadow:var(--shadow-lg)}
 .tech b{display:block;font-size:16px}.tech span{font-size:14px;color:var(--muted)}
 
-/* faq */
-details{background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:12px;box-shadow:var(--shadow);transition:border-color .3s,box-shadow .3s}
-details[open]{border-color:var(--violet);box-shadow:var(--shadow-lg)}
-summary{cursor:pointer;padding:18px 24px;font-weight:700;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:16px;align-items:center}
-summary::-webkit-details-marker{display:none}
-summary::after{content:"+";font:600 24px var(--mono);color:var(--violet);transition:transform .35s}
-details[open] summary::after{transform:rotate(135deg)}
-details .ans{padding:0 24px 20px;color:var(--muted);animation:drop .4s ease}
-@keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-.pitch{background:var(--grad);color:#fff;border-radius:26px;padding:40px;box-shadow:var(--shadow-lg);background-size:200% 200%;animation:shift 10s ease infinite}
-.pitch h3{font-size:24px;margin-bottom:12px}
-.pitch p{font-size:17px;opacity:.96}
 
 /* final cta */
 .final{background:linear-gradient(135deg,#1d4ed8,#7c3aed 60%,#db2777);color:#fff;border-radius:32px;padding:70px 30px;text-align:center;position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
@@ -220,7 +208,6 @@ footer{padding:40px 0;text-align:center;color:var(--muted);font-size:14px}
       <a class="t" href="#how">How it works</a>
       <a class="t" href="#diagram">System design</a>
       <a class="t" href="#tools">Tools</a>
-      <a class="t" href="#interview">Interview</a>
       <a class="btn primary sm" data-link="repo" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
@@ -460,28 +447,6 @@ footer{padding:40px 0;text-align:center;color:var(--muted);font-size:14px}
       <div class="tech rv" style="--d:.3s"><b>watchdog</b><span>Cross platform file events with debouncing.</span></div>
       <div class="tech rv" style="--d:.36s"><b>Docker Compose</b><span>One command to run database, migrations, bootstrap and watcher.</span></div>
     </div>
-  </div>
-</section>
-
-<!-- INTERVIEW -->
-<section class="alt" id="interview">
-  <div class="wrap" style="max-width:900px">
-    <div class="center">
-      <span class="eyebrow rv">Interview guide</span>
-      <h2 class="rv">Explain it in sixty seconds</h2>
-    </div>
-    <div class="pitch rv" style="margin-top:40px">
-      <h3>The short version</h3>
-      <p>"LLM agents cannot see a whole repo, so I built CodeContext. A watcher notices when you save a file, a tree-sitter indexer extracts the functions, classes and calls, and everything is stored in Postgres with vector embeddings. A FastMCP server then gives the agent five tools, like find_callers and semantic_search, so it asks small precise questions instead of reading whole files. A content hash makes updates incremental, so the index stays fresh in about a second."</p>
-    </div>
-    <h2 class="rv" style="font-size:28px;margin:56px 0 22px">Design decisions and why</h2>
-    <details class="rv"><summary>Why hash files instead of just reindexing everything?</summary><div class="ans">A SHA-256 hash of the file is stored in file_index. If it matches, the file is skipped. Editors often save without real changes, and big repos have thousands of files, so this keeps work proportional to what actually changed.</div></details>
-    <details class="rv"><summary>Why debounce for 300 ms?</summary><div class="ans">One save can fire several filesystem events, and formatters can rewrite a file right after. Waiting a short window turns a burst into a single reindex without feeling slow.</div></details>
-    <details class="rv"><summary>Why Postgres with pgvector and not a separate vector database?</summary><div class="ans">Symbols, call links and embeddings belong together. One store means one connection pool, joins between exact and semantic data, and less to operate. For one repo the scale fits comfortably.</div></details>
-    <details class="rv"><summary>Why is git history read live and not stored?</summary><div class="ans">Git already is the source of truth for history. Running git log at query time avoids a second copy that could drift, and keeps the database focused on code structure.</div></details>
-    <details class="rv"><summary>Why are the watcher and MCP server separate processes?</summary><div class="ans">Parsing is CPU heavy and queries are I/O heavy. Separate processes keep a big reindex from slowing answers, and either one can restart without the other. They only share the database.</div></details>
-    <details class="rv"><summary>How is the code kept clean?</summary><div class="ans">Strict layers: all SQL lives in one module, the MCP layer never touches the database, and only one module creates embeddings. Tool errors are returned as {"error", "code"} data so an agent can react instead of crashing.</div></details>
-    <details class="rv"><summary>How would you add a new language?</summary><div class="ans">Install its tree-sitter grammar, add one parser class that follows the BaseParser interface, and map the file extension to it. The writer, query engine and server need no changes.</div></details>
   </div>
 </section>
 
