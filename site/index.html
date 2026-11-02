@@ -164,6 +164,11 @@ nav.stuck{background:rgba(255,255,255,.85);backdrop-filter:blur(14px);box-shadow
 .tech b{display:block;font-size:16px}.tech span{font-size:14px;color:var(--muted)}
 
 
+.num{width:38px;height:38px;border-radius:12px;color:#fff;font:700 15px var(--mono);display:grid;place-items:center;margin-bottom:16px;box-shadow:0 8px 18px rgba(37,99,235,.25);transition:transform .4s}
+.card:hover .num{transform:rotate(-8deg) scale(1.1)}
+.why{margin-top:14px;padding:12px 14px;border-radius:12px;background:#f0f5ff;font-size:14.5px;color:#2b3f78}
+.why b{color:var(--violet)}
+
 /* final cta */
 .final{background:linear-gradient(135deg,#1d4ed8,#7c3aed 60%,#db2777);color:#fff;border-radius:32px;padding:70px 30px;text-align:center;position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
 .final::before,.final::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.12);animation:float 12s ease-in-out infinite}
@@ -208,6 +213,7 @@ footer{padding:40px 0;text-align:center;color:var(--muted);font-size:14px}
       <a class="t" href="#how">How it works</a>
       <a class="t" href="#diagram">System design</a>
       <a class="t" href="#tools">Tools</a>
+      <a class="t" href="#decisions">Decisions</a>
       <a class="btn primary sm" data-link="repo" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
@@ -446,6 +452,25 @@ footer{padding:40px 0;text-align:center;color:var(--muted);font-size:14px}
       <div class="tech rv" style="--d:.24s"><b>sentence-transformers</b><span>Local all-MiniLM-L6-v2 embeddings, no API key.</span></div>
       <div class="tech rv" style="--d:.3s"><b>watchdog</b><span>Cross platform file events with debouncing.</span></div>
       <div class="tech rv" style="--d:.36s"><b>Docker Compose</b><span>One command to run database, migrations, bootstrap and watcher.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DECISIONS -->
+<section class="alt" id="decisions">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow rv">Design decisions</span>
+      <h2 class="rv">Key choices and the reasons behind them</h2>
+      <p class="lead rv">Small, deliberate trade-offs that keep the system fast, simple and reliable.</p>
+    </div>
+    <div class="grid g2">
+      <div class="card rv" style="--d:0.0s;--c:linear-gradient(135deg,#2563eb,#06b6d4)"><div class="num" style="background:linear-gradient(135deg,#2563eb,#06b6d4)">1</div><h3>Skip unchanged files with a content hash</h3><p>Each file is hashed with SHA-256 and compared to the stored hash. A match means no work.</p><div class="why"><b>Why:</b> Work scales with what changed, not repo size.</div></div>
+      <div class="card rv" style="--d:0.08s;--c:linear-gradient(135deg,#7c3aed,#ec4899)"><div class="num" style="background:linear-gradient(135deg,#7c3aed,#ec4899)">2</div><h3>Debounce saves for 300 ms</h3><p>Bursts of filesystem events from one save become a single reindex.</p><div class="why"><b>Why:</b> No wasted parsing, and still fast enough to feel instant.</div></div>
+      <div class="card rv" style="--d:0.0s;--c:linear-gradient(135deg,#06b6d4,#10b981)"><div class="num" style="background:linear-gradient(135deg,#06b6d4,#10b981)">3</div><h3>One database for data and vectors</h3><p>PostgreSQL with pgvector holds symbols, call links, hashes and embeddings together.</p><div class="why"><b>Why:</b> One pool, easy joins between exact and semantic data, less to operate.</div></div>
+      <div class="card rv" style="--d:0.08s;--c:linear-gradient(135deg,#f59e0b,#ec4899)"><div class="num" style="background:linear-gradient(135deg,#f59e0b,#ec4899)">4</div><h3>Read git history live, never store it</h3><p>Change history comes from git log at query time.</p><div class="why"><b>Why:</b> Git stays the source of truth, so there is no second copy to drift.</div></div>
+      <div class="card rv" style="--d:0.0s;--c:linear-gradient(135deg,#2563eb,#7c3aed)"><div class="num" style="background:linear-gradient(135deg,#2563eb,#7c3aed)">5</div><h3>Separate watcher and MCP server processes</h3><p>Parsing is CPU heavy and queries are I/O heavy, so they run apart and share only the database.</p><div class="why"><b>Why:</b> A big reindex never slows answers, and each can restart alone.</div></div>
+      <div class="card rv" style="--d:0.08s;--c:linear-gradient(135deg,#10b981,#2563eb)"><div class="num" style="background:linear-gradient(135deg,#10b981,#2563eb)">6</div><h3>Strict layers and errors as data</h3><p>All SQL lives in one module, the MCP layer never touches the database, and failures return a code.</p><div class="why"><b>Why:</b> Easy to test and change, and agents can react instead of crashing.</div></div>
     </div>
   </div>
 </section>
